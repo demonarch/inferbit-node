@@ -1,0 +1,15 @@
+{
+  "name": "@inferbit/core",
+  "version": "0.1.0",
+  "description": "Prebuilt libinferbit binaries for InferBit",
+  "main": "src/index.js",
+  "license": "MIT",
+  "files": ["src/", "prebuilds/**/*"],
+  "scripts": {
+    "postinstall": "node src/postinstall.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demonarch/inferbit-node"
+  }
+}

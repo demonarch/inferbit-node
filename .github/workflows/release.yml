@@ -1,0 +1,152 @@
+name: Build and publish npm packages
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            arch: arm64
+            platform: darwin
+            lib: libinferbit.dylib
+            cmake_extra: ""
+
+          - os: macos-14
+            arch: x64
+            platform: darwin
+            lib: libinferbit.dylib
+            cmake_extra: "-DCMAKE_OSX_ARCHITECTURES=x86_64"
+
+          - os: ubuntu-latest
+            arch: x64
+            platform: linux
+            lib: libinferbit.so
+            cmake_extra: ""
+
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            platform: linux
+            lib: libinferbit.so
+            cmake_extra: ""
+
+          - os: windows-latest
+            arch: x64
+            platform: win32
+            lib: Release/inferbit.dll
+            out_name: inferbit.dll
+            cmake_extra: "-A x64"
+
+          - os: windows-latest
+            arch: arm64
+            platform: win32
+            lib: Release/inferbit.dll
+            out_name: inferbit.dll
+            cmake_extra: "-A ARM64"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq cmake gcc
+
+      - name: Build libinferbit (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd libinferbit
+          cmake -B build -DCMAKE_BUILD_TYPE=Release ${{ matrix.cmake_extra }}
+          cmake --build build
+
+      - name: Build libinferbit (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          cd libinferbit
+          cmake -B build ${{ matrix.cmake_extra }}
+          cmake --build build --config Release
+
+      - name: Prepare prebuild directory
+        shell: bash
+        run: |
+          mkdir -p packages/core/prebuilds/${{ matrix.platform }}-${{ matrix.arch }}
+          cp libinferbit/build/${{ matrix.lib }} packages/core/prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/
+
+      - name: Upload prebuild artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: prebuild-${{ matrix.platform }}-${{ matrix.arch }}
+          path: packages/core/prebuilds/${{ matrix.platform }}-${{ matrix.arch }}/
+
+  test-and-publish:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Download all prebuilds
+        uses: actions/download-artifact@v5
+        with:
+          path: /tmp/prebuilds-raw
+          pattern: prebuild-*
+
+      - name: Organize prebuilds
+        run: |
+          mkdir -p packages/core/prebuilds
+          # Each artifact is in /tmp/prebuilds-raw/prebuild-<platform>-<arch>/
+          # Move to packages/core/prebuilds/<platform>-<arch>/
+          for dir in /tmp/prebuilds-raw/prebuild-*; do
+            name=$(basename "$dir")
+            target="packages/core/prebuilds/${name#prebuild-}"
+            mkdir -p "$target"
+            cp "$dir"/* "$target/"
+          done
+          find packages/core/prebuilds -type f
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Publish @inferbit/core
+        working-directory: packages/core
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @inferbit/node
+        working-directory: packages/node
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish @inferbit/cli
+        working-directory: packages/cli
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

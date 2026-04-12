@@ -1,0 +1,21 @@
+{
+  "name": "@inferbit/cli",
+  "version": "0.1.0",
+  "description": "CLI for InferBit — quantize, chat, bench, info, serve",
+  "bin": {
+    "inferbit": "src/index.js"
+  },
+  "license": "MIT",
+  "files": ["src/"],
+  "dependencies": {
+    "@inferbit/node": "0.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/demonarch/inferbit-node"
+  },
+  "keywords": ["llm", "inference", "quantization", "cli", "cpu"]
+}
