@@ -1,6 +1,6 @@
 # InferBit for Node.js
 
-Run any open LLM on CPU from Node.js. Same C engine as the [Python package](https://pypi.org/project/inferbit/).
+**v0.2.0** — Run any open LLM on CPU from Node.js. Same C engine as the [Python package](https://pypi.org/project/inferbit/).
 
 ## Packages
 
