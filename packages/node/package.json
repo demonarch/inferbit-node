@@ -1,6 +1,6 @@
 {
   "name": "@inferbit/node",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "Run any open LLM on CPU \u2014 Node.js/Bun library",
   "main": "src/index.js",
   "license": "MIT",
@@ -8,7 +8,7 @@
     "src/"
   ],
   "dependencies": {
-    "@inferbit/core": "0.2.3",
+    "@inferbit/core": "0.3.0",
     "koffi": "^2.15.6"
   },
   "engines": {
