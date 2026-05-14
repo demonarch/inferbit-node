@@ -1,6 +1,6 @@
 {
   "name": "@inferbit/cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CLI for InferBit \u2014 quantize, chat, bench, info, serve",
   "bin": {
     "inferbit": "src/index.js"
@@ -10,7 +10,7 @@
     "src/"
   ],
   "dependencies": {
-    "@inferbit/node": "0.3.0"
+    "@inferbit/node": "0.4.0"
   },
   "engines": {
     "node": ">=18.0.0"

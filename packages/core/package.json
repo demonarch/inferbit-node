@@ -1,6 +1,6 @@
 {
   "name": "@inferbit/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Prebuilt libinferbit binaries for InferBit",
   "main": "src/index.js",
   "license": "MIT",
